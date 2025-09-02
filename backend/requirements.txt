@@ -1,6 +1,0 @@
-fastapi
-uvicorn[standard]
-python-multipart
-python-docx
-PyPDF2
-textstat
