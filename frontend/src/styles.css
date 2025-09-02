@@ -1,0 +1,6 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+/* Small custom tweaks */
+.form-control { border-radius: 8px; padding: .5rem; }
+.btn-primary { background: linear-gradient(180deg,#2563eb,#1e40af); border: none; }
