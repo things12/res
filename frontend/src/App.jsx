@@ -6,12 +6,32 @@ export default function App() {
   const [file, setFile] = useState(null)
   const [report, setReport] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [loadingProgress, setLoadingProgress] = useState(0)
+
+  // Simulate loading progress
+  useEffect(() => {
+    let interval
+    if (loading) {
+      setLoadingProgress(0)
+      interval = setInterval(() => {
+        setLoadingProgress(prev => {
+          if (prev >= 90) return prev
+          return prev + Math.random() * 15
+        })
+      }, 200)
+    } else {
+      setLoadingProgress(0)
+    }
+    return () => clearInterval(interval)
+  }, [loading])
 
   async function analyze(e) {
     e.preventDefault()
     if (!file) return alert('Please select a resume file (PDF or DOCX).')
     
     setLoading(true)
+    setReport(null) // Clear previous results
+    
     try {
       const form = new FormData()
       form.append('file', file)
@@ -20,14 +40,21 @@ export default function App() {
         body: form 
       })
       const data = await res.json()
-      if (res.ok) {
-        setReport(data)
-      } else {
-        alert(data.detail || 'Analysis failed')
-      }
+      
+      // Complete the progress bar
+      setLoadingProgress(100)
+      
+      // Small delay to show completion
+      setTimeout(() => {
+        if (res.ok) {
+          setReport(data)
+        } else {
+          alert(data.detail || 'Analysis failed')
+        }
+        setLoading(false)
+      }, 500)
     } catch (error) {
       alert('Error analyzing resume. Please try again.')
-    } finally {
       setLoading(false)
     }
   }
@@ -35,6 +62,8 @@ export default function App() {
   function reset() {
     setFile(null)
     setReport(null)
+    setLoading(false)
+    setLoadingProgress(0)
   }
 
   function getScoreColor(score) {
@@ -112,7 +141,58 @@ export default function App() {
           </div>
         </form>
 
-        {report && (
+        {/* Enhanced Loading State */}
+        {loading && (
+          <div className="loading-section">
+            <div className="loading-container">
+              <div className="loading-animation">
+                <div className="loading-circle">
+                  <div className="loading-inner-circle">
+                    <span className="loading-icon">🔍</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="loading-content">
+                <h3>Analyzing Your Resume</h3>
+                <p>Our AI is examining your resume for optimization opportunities...</p>
+                
+                <div className="progress-bar">
+                  <div 
+                    className="progress-fill" 
+                    style={{ width: `${loadingProgress}%` }}
+                  ></div>
+                </div>
+                <div className="progress-text">{Math.round(loadingProgress)}% Complete</div>
+                
+                <div className="analysis-steps">
+                  <div className={`step ${loadingProgress > 10 ? 'completed' : 'active'}`}>
+                    <span className="step-icon">📄</span>
+                    <span>Extracting text content</span>
+                  </div>
+                  <div className={`step ${loadingProgress > 30 ? 'completed' : loadingProgress > 10 ? 'active' : ''}`}>
+                    <span className="step-icon">🔎</span>
+                    <span>Analyzing sections & structure</span>
+                  </div>
+                  <div className={`step ${loadingProgress > 60 ? 'completed' : loadingProgress > 30 ? 'active' : ''}`}>
+                    <span className="step-icon">💪</span>
+                    <span>Evaluating action verbs & keywords</span>
+                  </div>
+                  <div className={`step ${loadingProgress > 85 ? 'completed' : loadingProgress > 60 ? 'active' : ''}`}>
+                    <span className="step-icon">📊</span>
+                    <span>Calculating readability score</span>
+                  </div>
+                  <div className={`step ${loadingProgress === 100 ? 'completed' : loadingProgress > 85 ? 'active' : ''}`}>
+                    <span className="step-icon">✨</span>
+                    <span>Generating improvement suggestions</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {report && !loading && (
           <div className="results">
             <div 
               className="score-section"
